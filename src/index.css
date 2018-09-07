@@ -1,0 +1,29 @@
+@font-face {
+  font-family: 'CuratorBold';
+  src: local('CuratorBold'), url(./assests/fonts/CuratorHeadSTBold.otf) format('otf');
+}
+
+@font-face {
+  font-family: 'CuratorRegular';
+  src: local('CuratorRegular'), url(./assests/fonts/CuratorHeadSTRegular.otf) format('otf');
+}
+
+body {
+  font-family: 'CuratorRegular', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color:  #333333;
+  body: 1rem;
+}
+
+h1 {
+  font-family: 'CuratorBold', sans-serif;
+}
+
+.tick {
+  font-size : 13px;
+  color : #333333;
+}
