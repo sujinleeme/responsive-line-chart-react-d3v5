@@ -4,10 +4,10 @@ import { media } from './style-utils';
 import colors from './colors';
 import Contents from './ChartContents';
 import d3 from './d3';
+import { AxisX, AxisY, Line, Legend } from './ChartComponents';
 import {
-  AxisX, AxisY, Line, Label,
-} from './ChartComponents';
-import { getPlotData } from './DataHandler';
+  getPlotData, getLegends, addPlotData, removePlotData,
+} from './DataHandler';
 
 
 const MARGIN = {
@@ -27,57 +27,56 @@ const CANVAS_HEIGHT = {
 export default class LineChart extends Component {
   constructor(props) {
     super(props);
-
-    this.canvasWidth = 0;
-    this.canvasheight = 300;
     this.ChartCanvas = React.createRef();
 
     this.state = {
-      data: [],
+      defaultData: [],
+      plotData: [],
       xScale: null,
       yScale: null,
       plotHeight: null,
       plotWidth: null,
+      isShow: {
+        India: true,
+        Thailand: true,
+        Vietnam: true,
+      },
+      legends: [],
     };
+    this.onPlotDataChange = this.onPlotDataChange.bind(this);
   }
 
   componentDidMount() {
-    this.determineWidth();
+    this.onPlotWidthChange();
     d3.csv('milledRiceEndingStocks.csv', d => ({
       Year: d.Year,
       Vietnam: d.Vietnam,
       India: d.India,
       Thailand: d.Thailand,
     })).then(data => this.setState({
-      data,
-    }, this.updateChartSize(data)));
+      defaultData: data,
+      plotData: data,
+      legends: getLegends(data.columns, 'Year'),
+    }, this.onChangeChartSize(data)));
   }
 
-  updateChartSize(data) {
-    this.setState((prevState) => {
-      const { plotWidth } = prevState;
-      return {
-        xScale: this.updateX(data, plotWidth, 'Year'),
-        yScale: this.updateY(data),
-      };
-    }, window.addEventListener('resize', this.determineWidth.bind(this)));
+  onChangeChartSize(data) {
+    const { plotWidth } = this.state;
+    this.setState({ xScale: this.onScaleX(data, plotWidth, 'Year'), yScale: this.onScaleY(data) },
+      window.addEventListener('resize', this.onPlotWidthChange.bind(this)));
   }
 
-  determineWidth() {
-    const { data } = this.state;
-    const { viewType } = this.props;
-    const nodeWidth = this.ChartCanvas.current.getBoundingClientRect().width;
-    const plotWidth = nodeWidth - MARGIN[viewType].left;
-    const plotHeight = CANVAS_HEIGHT[viewType] - (MARGIN[viewType].top + MARGIN[viewType].bottom);
+  onChangeAxis() {
+    const { plotData, plotWidth, isShow } = this.state;
+    const selections = Object.values(isShow).filter(Boolean).length;
+    if (selections === 0) { return; }
     this.setState({
-      plotWidth,
-      plotHeight,
-      xScale: this.updateX(data, plotWidth, 'Year'),
-      yScale: this.updateY(data),
+      xScale: this.onScaleX(plotData, plotWidth, 'Year'),
+      yScale: this.onScaleY(plotData),
     });
   }
 
-  updateX(data, plotWidth, keyName) {
+  onScaleX(data, plotWidth, keyName) {
     const scaleData = data.map(d => +d[keyName]);
     const dataPoint = {
       min: d3.min(scaleData),
@@ -89,8 +88,7 @@ export default class LineChart extends Component {
     return scale;
   }
 
-
-  updateY(data) {
+  onScaleY(data) {
     const { plotHeight } = this.state;
     const scaleData = [].concat(...data.map(d => [+d.Vietnam, +d.India, +d.Thailand]));
     const dataPoint = {
@@ -103,12 +101,40 @@ export default class LineChart extends Component {
     return scale;
   }
 
+  onPlotDataChange(countryName) {
+    const { defaultData, plotData, isShow } = this.state;
+    const show = !isShow[countryName];
+    const data = (show ? addPlotData(plotData, defaultData, countryName)
+      : removePlotData(plotData, countryName));
+
+    this.setState({
+      plotData: data,
+      isShow: {
+        ...isShow,
+        [countryName]: show,
+      },
+    }, this.onChangeAxis);
+  }
+
+  onPlotWidthChange() {
+    const { plotData } = this.state;
+    const { viewType } = this.props;
+    const nodeWidth = this.ChartCanvas.current.getBoundingClientRect().width;
+    const plotWidth = nodeWidth - MARGIN[viewType].left;
+    const plotHeight = CANVAS_HEIGHT[viewType] - (MARGIN[viewType].top + MARGIN[viewType].bottom);
+    this.setState({
+      plotWidth,
+      plotHeight,
+      xScale: this.onScaleX(plotData, plotWidth, 'Year'),
+      yScale: this.onScaleY(plotData),
+    });
+  }
+
   render() {
     const {
-      data, xScale, yScale, plotHeight,
+      plotData, xScale, yScale, plotHeight, isShow, legends,
     } = this.state;
     const { viewType } = this.props;
-    const columns = ['India', 'Thailand', 'Vietnam'];
     const x = MARGIN[viewType].left;
 
     return (
@@ -121,7 +147,7 @@ export default class LineChart extends Component {
         </Deck>
         <Wrapper>
           <Chart innerRef={this.ChartCanvas} height={CANVAS_HEIGHT[viewType]}>
-            { data.length > 0 && (
+            { plotData.length > 0 && (
             <SVGCanvas>
               <AxisX
                 x={x}
@@ -135,32 +161,34 @@ export default class LineChart extends Component {
                 yScale={yScale}
                 ticksNum={5}
               />
-              {columns.map(column => (
+              {legends.map(legend => (
                 <Line
-                  key={column}
+                  key={legend}
                   x={x}
                   y="0"
+                  show={isShow[legend]}
                   xScale={xScale}
                   yScale={yScale}
-                  strokeColor={colors[column]}
-                  plotData={getPlotData(data, column)}
+                  strokeColor={colors[legend]}
+                  plotData={getPlotData(plotData, 'Year', legend)}
                 />
               ))}
             </SVGCanvas>
             )
           }
-
           </Chart>
-          <Legend height={plotHeight}>
-            {columns.map(column => (
-              <Label
-                key={column}
-                title={column}
-                strokeColor={colors[column]}
+          <LegendContainer height={plotHeight}>
+            {legends.map(legend => (
+              <Legend
+                key={legend}
+                title={legend}
+                strokeColor={colors[legend]}
+                show={isShow}
+                onSettingChange={() => this.onPlotDataChange(legend)}
               />
             ))
             }
-          </Legend>
+          </LegendContainer>
         </Wrapper>
       </div>
     );
@@ -204,7 +232,7 @@ const Chart = styled.div`
 `;
 
 
-const Legend = styled.div`
+const LegendContainer = styled.div`
   width: 17%;
   height: ${props => `${props.height}px`};
   display: flex;

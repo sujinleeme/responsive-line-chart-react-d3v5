@@ -14,7 +14,6 @@ const D3blackbox = d3render => class Blackbox extends Component {
 
   render() {
     const { x, y } = this.props;
-
     return <g transform={`translate(${x}, ${y})`} ref="anchor" />;
   }
 };
@@ -32,31 +31,36 @@ export const AxisY = D3blackbox(function () {
 });
 
 export const Line = ({
-  x, xScale, yScale, plotData, strokeColor,
+  show, x, xScale, yScale, plotData, strokeColor,
 }) => {
   const path = d3
     .line()
     .x(d => xScale(d.x))
     .y(d => yScale(d.y));
-
   const d = path(plotData);
   return (
-    <Path
-      strokeColor={strokeColor}
-      transform={`translate(${x}, 0)`}
-      d={d}
-    />
+    <g>
+      {show && (
+      <Path
+        strokeColor={strokeColor}
+        transform={`translate(${x}, 0)`}
+        d={d}
+      />
+      )}
+    </g>
   );
 };
 
-export const Label = ({ title }) => (
+export const Legend = ({ title, show, onSettingChange }) => (
   <LabelBox>
-    <svg width="50%">
-      <LabelLine x1="0" y1="50%" x2="50%" y2="50%" stroke={colors[title]} />
-    </svg>
-    <LabelText>
-      {title}
-    </LabelText>
+    <InnerLabel
+      onClick={onSettingChange}
+    >
+      <svg width="50%">
+        <LabelLine x1="0" y1="50%" x2="50%" y2="50%" stroke={colors[title]} />
+      </svg>
+      <LabelText>{title}</LabelText>
+    </InnerLabel>
   </LabelBox>
 );
 
@@ -65,10 +69,20 @@ const LabelLine = styled.line`
 `;
 
 const LabelBox = styled.div`
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  justify-InnerLabel: center;
+  background-color: orange;
+`;
+
+const InnerLabel = styled.div`
+  height: 15px;
+  margin: auto;
+  display: flex;
+  justify-InnerLabel: center;
+  background-color: green;
+  cursor: pointer;
 `;
 
 const LabelText = styled.span`
@@ -77,7 +91,7 @@ const LabelText = styled.span`
   font-size : 13px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-InnerLabel: center;
 `;
 
 const Path = styled.path`
