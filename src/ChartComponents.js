@@ -98,4 +98,5 @@ const Path = styled.path`
   fill: none;
   stroke: ${props => props.strokeColor};
   stroke-width: 2px;
+  transition: d 0.5s;
 `;
