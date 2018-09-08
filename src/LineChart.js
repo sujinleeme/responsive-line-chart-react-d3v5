@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 import { media } from './style-utils';
 import colors from './colors';
@@ -31,6 +30,7 @@ export default class LineChart extends Component {
 
     this.canvasWidth = 0;
     this.canvasheight = 300;
+    this.ChartCanvas = React.createRef();
 
     this.state = {
       data: [],
@@ -66,7 +66,7 @@ export default class LineChart extends Component {
   determineWidth() {
     const { data } = this.state;
     const { viewType } = this.props;
-    const nodeWidth = ReactDOM.findDOMNode(this.refs.ChartCanvas).getBoundingClientRect().width;
+    const nodeWidth = this.ChartCanvas.current.getBoundingClientRect().width;
     const plotWidth = nodeWidth - MARGIN[viewType].left;
     const plotHeight = CANVAS_HEIGHT[viewType] - (MARGIN[viewType].top + MARGIN[viewType].bottom);
     this.setState({
@@ -120,7 +120,7 @@ export default class LineChart extends Component {
           {Contents.deck}
         </Deck>
         <Wrapper>
-          <Chart ref="ChartCanvas" height={CANVAS_HEIGHT[viewType]}>
+          <Chart innerRef={this.ChartCanvas} height={CANVAS_HEIGHT[viewType]}>
             { data.length > 0 && (
             <SVGCanvas>
               <AxisX
@@ -213,7 +213,5 @@ const Legend = styled.div`
     width: 100%;
     flex-direction: row;
     height: 80px;
-
-    
     `}
 `;
