@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
+import ReactDOM from 'react-dom';
 import { media } from './style-utils';
 import colors from './colors';
 import Contents from './ChartContents';
 import d3 from './d3';
-import { AxisX, AxisY, Line, Legend } from './ChartComponents';
+import {
+  AxisX, AxisY, Line, Legend, ToolTipLine, ToolTipBox,
+} from './ChartComponents';
 import {
   getPlotData, getLegends, addPlotData, removePlotData,
 } from './DataHandler';
@@ -41,9 +44,13 @@ export default class LineChart extends Component {
         Thailand: true,
         Vietnam: true,
       },
+      toolTip: false,
       legends: [],
     };
     this.onPlotDataChange = this.onPlotDataChange.bind(this);
+    this.drawToolTip = this.drawToolTip.bind(this);
+    this.showToolTip = this.showToolTip.bind(this);
+    this.moveToolTip = this.moveToolTip.bind(this);
   }
 
   componentDidMount() {
@@ -57,26 +64,47 @@ export default class LineChart extends Component {
       defaultData: data,
       plotData: data,
       legends: getLegends(data.columns, 'Year'),
-    }, this.onChangeChartSize(data)));
+    }, this.onChartSizeChange(data)));
   }
 
-  onChangeChartSize(data) {
+  onChartSizeChange(data) {
     const { plotWidth } = this.state;
-    this.setState({ xScale: this.onScaleX(data, plotWidth, 'Year'), yScale: this.onScaleY(data) },
+    this.setState({ xScale: this.scaleX(data, plotWidth, 'Year'), yScale: this.scaleY(data) },
       window.addEventListener('resize', this.onPlotWidthChange.bind(this)));
   }
 
-  onChangeAxis() {
+  onAxisChange() {
     const { plotData, plotWidth, isShow } = this.state;
     const selections = Object.values(isShow).filter(Boolean).length;
     if (selections === 0) { return; }
     this.setState({
-      xScale: this.onScaleX(plotData, plotWidth, 'Year'),
-      yScale: this.onScaleY(plotData),
+      xScale: this.scaleX(plotData, plotWidth, 'Year'),
+      yScale: this.scaleY(plotData),
     });
   }
 
-  onScaleX(data, plotWidth, keyName) {
+  drawToolTip(showTooltip, pos, data) {
+    const props = { showTooltip, pos, data };
+    ReactDOM.render(<ToolTipBox {...props} />, document.getElementById('tooltip'));
+  }
+  
+  moveToolTip() {
+    const { xScale } = this.state;
+    // var x0 = xScale.invert(d3.mouse(this)[0])
+    console.log(xScale.invert);
+      // i = bisectDate(data, x0, 1),
+      // d0 = data[i - 1],
+      // d1 = data[i],
+      // d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+  }
+
+  showToolTip() {
+    this.setState(prevState => ({
+      toolTip: !prevState.toolTip,
+    }));
+  }
+
+  scaleX(data, plotWidth, keyName) {
     const scaleData = data.map(d => +d[keyName]);
     const dataPoint = {
       min: d3.min(scaleData),
@@ -88,7 +116,7 @@ export default class LineChart extends Component {
     return scale;
   }
 
-  onScaleY(data) {
+  scaleY(data) {
     const { plotHeight } = this.state;
     const scaleData = [].concat(...data.map(d => [+d.Vietnam, +d.India, +d.Thailand]));
     const dataPoint = {
@@ -113,7 +141,7 @@ export default class LineChart extends Component {
         ...isShow,
         [countryName]: show,
       },
-    }, this.onChangeAxis);
+    }, this.onAxisChange);
   }
 
   onPlotWidthChange() {
@@ -125,14 +153,15 @@ export default class LineChart extends Component {
     this.setState({
       plotWidth,
       plotHeight,
-      xScale: this.onScaleX(plotData, plotWidth, 'Year'),
-      yScale: this.onScaleY(plotData),
+      xScale: this.scaleX(plotData, plotWidth, 'Year'),
+      yScale: this.scaleY(plotData),
     });
   }
 
   render() {
     const {
       plotData, xScale, yScale, plotHeight, isShow, legends,
+      toolTip,
     } = this.state;
     const { viewType } = this.props;
     const x = MARGIN[viewType].left;
@@ -147,8 +176,13 @@ export default class LineChart extends Component {
         </Deck>
         <Wrapper>
           <Chart innerRef={this.ChartCanvas} height={CANVAS_HEIGHT[viewType]}>
+            <Text>Thousand metric tonnes</Text>
             { plotData.length > 0 && (
-            <SVGCanvas>
+            <SVGCanvas
+              onMouseEnter={this.showToolTip}
+              onMouseLeave={this.showToolTip}
+              onMouseMove={this.moveToolTip}
+            >
               <AxisX
                 x={x}
                 y={plotHeight}
@@ -161,6 +195,9 @@ export default class LineChart extends Component {
                 yScale={yScale}
                 ticksNum={5}
               />
+              <svg id="tooltip">
+                {toolTip && (<ToolTipBox />) }
+              </svg>
               {legends.map(legend => (
                 <Line
                   key={legend}
@@ -177,13 +214,14 @@ export default class LineChart extends Component {
             )
           }
           </Chart>
-          <LegendContainer height={plotHeight}>
+          <LegendContainer height={plotHeight/2}>
+            <Text>Click to hide/show</Text>
             {legends.map(legend => (
               <Legend
                 key={legend}
                 title={legend}
                 strokeColor={colors[legend]}
-                show={isShow}
+                show={isShow[legend]}
                 onSettingChange={() => this.onPlotDataChange(legend)}
               />
             ))
@@ -243,3 +281,8 @@ const LegendContainer = styled.div`
     height: 80px;
     `}
 `;
+
+const Text = styled.span`
+    font-size: 13px;
+    color: #333333;
+`

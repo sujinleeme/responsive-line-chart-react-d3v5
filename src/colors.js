@@ -3,4 +3,5 @@ export default {
   Thailand: '#F6AB9A',
   Vietnam: '#FED47D',
   Text: '#333333',
+  BoldText: '#000000',
 };
