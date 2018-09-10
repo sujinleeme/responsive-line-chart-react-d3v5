@@ -1,16 +1,16 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
-import ReactDOM from 'react-dom';
+import d3 from './d3';
 import { media } from './style-utils';
 import colors from './colors';
 import Contents from './ChartContents';
-import d3 from './d3';
 import {
   AxisX, AxisY, Line, Legend, ToolTipLine, ToolTipBox,
 } from './ChartComponents';
 import {
   getPlotData, getLegends, addPlotData, removePlotData,
 } from './DataHandler';
+import { getMousePos } from './utils';
 
 
 const MARGIN = {
@@ -45,10 +45,10 @@ export default class LineChart extends Component {
         Vietnam: true,
       },
       toolTip: false,
+      toolTipData: null,
       legends: [],
     };
     this.onPlotDataChange = this.onPlotDataChange.bind(this);
-    this.drawToolTip = this.drawToolTip.bind(this);
     this.showToolTip = this.showToolTip.bind(this);
     this.moveToolTip = this.moveToolTip.bind(this);
   }
@@ -83,19 +83,20 @@ export default class LineChart extends Component {
     });
   }
 
-  drawToolTip(showTooltip, pos, data) {
-    const props = { showTooltip, pos, data };
-    ReactDOM.render(<ToolTipBox {...props} />, document.getElementById('tooltip'));
+  moveToolTip(e) {
+    let { x, y } = getMousePos(e);
+    this.onToolTipDataChange(x);
   }
   
-  moveToolTip() {
-    const { xScale } = this.state;
-    // var x0 = xScale.invert(d3.mouse(this)[0])
-    console.log(xScale.invert);
-      // i = bisectDate(data, x0, 1),
-      // d0 = data[i - 1],
-      // d1 = data[i],
-      // d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+  onToolTipDataChange(posX) {
+    const { xScale, plotData } = this.state;
+    const { viewType } = this.props;
+    const marginLeft = MARGIN[viewType].left;
+    const x0 = xScale.invert(posX - marginLeft);
+    const bisectDate = d3.bisector(d => d.Year).right;
+    const index = bisectDate(plotData, x0, 0);
+    const toolTipData = plotData[index];
+    this.setState({ toolTipData });
   }
 
   showToolTip() {
@@ -161,7 +162,7 @@ export default class LineChart extends Component {
   render() {
     const {
       plotData, xScale, yScale, plotHeight, isShow, legends,
-      toolTip,
+      toolTip, toolTipData,
     } = this.state;
     const { viewType } = this.props;
     const x = MARGIN[viewType].left;
@@ -181,7 +182,7 @@ export default class LineChart extends Component {
             <SVGCanvas
               onMouseEnter={this.showToolTip}
               onMouseLeave={this.showToolTip}
-              onMouseMove={this.moveToolTip}
+              onMouseMove={e => this.moveToolTip(e)}
             >
               <AxisX
                 x={x}
@@ -195,9 +196,7 @@ export default class LineChart extends Component {
                 yScale={yScale}
                 ticksNum={5}
               />
-              <svg id="tooltip">
-                {toolTip && (<ToolTipBox />) }
-              </svg>
+              {toolTip && (<ToolTipBox />) }
               {legends.map(legend => (
                 <Line
                   key={legend}
@@ -214,13 +213,15 @@ export default class LineChart extends Component {
             )
           }
           </Chart>
-          <LegendContainer height={plotHeight/2}>
+          <LegendContainer height={plotHeight / 2}>
             <Text>Click to hide/show</Text>
+            <Text>{toolTipData ? toolTipData.Year : ''}</Text>
             {legends.map(legend => (
               <Legend
                 key={legend}
                 title={legend}
                 strokeColor={colors[legend]}
+                value={toolTipData ? toolTipData[legend] : ''}
                 show={isShow[legend]}
                 onSettingChange={() => this.onPlotDataChange(legend)}
               />
@@ -246,7 +247,6 @@ const Wrapper = styled.div`
 `;
 
 const SVGCanvas = styled.svg`
-  // margin-right: ${MARGIN.desktop.top}px;
   width: 100%;
   height: 100%;
   ${media.handheld`
@@ -285,4 +285,4 @@ const LegendContainer = styled.div`
 const Text = styled.span`
     font-size: 13px;
     color: #333333;
-`
+`;

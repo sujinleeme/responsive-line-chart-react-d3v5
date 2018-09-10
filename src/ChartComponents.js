@@ -67,7 +67,7 @@ export const Line = ({
   );
 };
 
-export const Legend = ({ title, show, onSettingChange }) => (
+export const Legend = ({ title, show, value="", onSettingChange }) => (
   <LabelBox>
     <InnerLabel
       onClick={onSettingChange}
@@ -86,6 +86,11 @@ export const Legend = ({ title, show, onSettingChange }) => (
         show={show}
       >
         {title}
+      </LabelText>
+      <LabelText
+        show={show}
+      >
+        {value}
       </LabelText>
     </InnerLabel>
   </LabelBox>
@@ -117,7 +122,7 @@ const InnerLabel = styled.div`
   height: 15px;
   margin: auto;
   display: flex;
-  justify-InnerLabel: center;
+  justify-content: center;
   cursor: pointer;
 `;
 
