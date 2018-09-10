@@ -31,9 +31,16 @@ export const AxisY = D3blackbox(function () {
 });
 
 
-export const ToolTipBox = () => (
-  <Rect />
-);
+export const ToolTipBox = ({x, x1}) => {
+  return (
+    <LabelLine
+      x1={x1+x}
+      y1="0"
+      x2={x1+x}
+      y2="100%"
+      stroke="red"
+    />);
+};
 
 export const ToolTipLine = D3blackbox(() => {
   // const { ticksNum = 5, xScale, yScale } = this.props;
@@ -45,7 +52,7 @@ export const ToolTipLine = D3blackbox(() => {
   // d3.select(this.refs.anchor).call(axis);
 });
 
-
+// }
 export const Line = ({
   show, x, xScale, yScale, plotData, strokeColor,
 }) => {

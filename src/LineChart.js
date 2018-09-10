@@ -92,11 +92,10 @@ export default class LineChart extends Component {
     const { xScale, plotData } = this.state;
     const { viewType } = this.props;
     const marginLeft = MARGIN[viewType].left;
-    const x0 = xScale.invert(posX - marginLeft);
+    const x0 = xScale.invert(posX-marginLeft);
     const bisectDate = d3.bisector(d => d.Year).right;
-    const index = bisectDate(plotData, x0, 0);
-    const toolTipData = plotData[index];
-    this.setState({ toolTipData });
+    const i = bisectDate(plotData, x0, 0);
+    this.setState({ toolTipData: plotData[i] });
   }
 
   showToolTip() {
@@ -196,7 +195,13 @@ export default class LineChart extends Component {
                 yScale={yScale}
                 ticksNum={5}
               />
-              {toolTip && (<ToolTipBox />) }
+              {toolTip && (
+                <ToolTipBox
+                  x={x}
+                  x1={toolTipData? xScale(toolTipData.Year) : x}
+                  value={toolTipData}
+                />) }
+                <SVGCanvas>
               {legends.map(legend => (
                 <Line
                   key={legend}
@@ -209,6 +214,7 @@ export default class LineChart extends Component {
                   plotData={getPlotData(plotData, 'Year', legend)}
                 />
               ))}
+                </SVGCanvas>
             </SVGCanvas>
             )
           }
