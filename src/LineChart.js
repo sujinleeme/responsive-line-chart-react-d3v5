@@ -172,6 +172,7 @@ export default class LineChart extends Component {
     } = this.state;
     const { viewType } = this.props;
     const x = MARGIN[viewType].left;
+    const toolTipLineX = toolTipData && xScale(toolTipData.Year);
 
     return (
       <div>
@@ -209,9 +210,12 @@ export default class LineChart extends Component {
 
               <SVGCanvas>
                 <ToolTipBox
-                  x={x}
-                  x1={xScale(toolTipData.Year)}
+                  transformX={x}
+                  x1={toolTipLineX}
+                  y1="0"
+                  x2={toolTipLineX}
                   value={toolTipData}
+                  y2={plotHeight}
                 />
                 {legends.map(legend => (
                   <Line

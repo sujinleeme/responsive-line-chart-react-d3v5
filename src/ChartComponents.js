@@ -31,16 +31,14 @@ export const AxisY = D3blackbox(function () {
 });
 
 
-export const ToolTipBox = ({x, x1}) => {
-  return (
-    <ToolTipLine
-      x1={x1+x}
-      y1="0"
-      x2={x1+x}
-      y2="100%"
-      stroke="red"
-    />);
-};
+export const ToolTipBox = ({ transformX, x1, y2 }) => (
+  <ToolTipLine
+    x1={x1 + transformX}
+    y1="0"
+    x2={x1 + transformX}
+    y2={y2}
+    stroke="red"
+  />);
 
 export const Line = ({
   show, x, xScale, yScale, plotData, strokeColor,
@@ -63,7 +61,9 @@ export const Line = ({
   );
 };
 
-export const Legend = ({ title, show, value="", onSettingChange }) => (
+export const Legend = ({
+  title, show, value = '', onSettingChange,
+}) => (
   <LabelBox>
     <InnerLabel
       onClick={onSettingChange}
@@ -95,7 +95,7 @@ export const Legend = ({ title, show, value="", onSettingChange }) => (
 
 const Svg = styled.svg`
   width: 30%;
-`
+`;
 const Rect = styled.rect`
   background: red;
   width: 30px;
@@ -110,7 +110,7 @@ const ToolTipLine = styled.line`
 
 const LabelLine = styled.line`
   stroke-width: 2;
-  opacity: ${props => props.show ? 1 : 0.5};
+  opacity: ${props => (props.show ? 1 : 0.5)};
   transition: line 0.5s ease-in-out;
 `;
 
@@ -136,7 +136,7 @@ const LabelText = styled.span`
   display: flex;
   flex-direction: column;
   justify-InnerLabel: center;
-  font-weight: ${props => props.show ? 'bold ' : 'normal !important'};
+  font-weight: ${props => (props.show ? 'bold ' : 'normal !important')};
 `;
 
 const Path = styled.path`
