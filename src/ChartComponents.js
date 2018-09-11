@@ -33,7 +33,7 @@ export const AxisY = D3blackbox(function () {
 
 export const ToolTipBox = ({x, x1}) => {
   return (
-    <LabelLine
+    <ToolTipLine
       x1={x1+x}
       y1="0"
       x2={x1+x}
@@ -42,17 +42,6 @@ export const ToolTipBox = ({x, x1}) => {
     />);
 };
 
-export const ToolTipLine = D3blackbox(() => {
-  // const { ticksNum = 5, xScale, yScale } = this.props;
-  // const path = d3
-  //   .line()
-  //   .x1(d => xScale(d['Year']))
-  //   .y(d => yScale(d.y))
-  // const axis = d3.line(xScale)
-  // d3.select(this.refs.anchor).call(axis);
-});
-
-// }
 export const Line = ({
   show, x, xScale, yScale, plotData, strokeColor,
 }) => {
@@ -112,10 +101,17 @@ const Rect = styled.rect`
   width: 30px;
   height: 30px;
 `;
+
+const ToolTipLine = styled.line`
+  stroke-width: 2;
+    transition-duration: 1s;
+  opacity: 1;
+`;
+
 const LabelLine = styled.line`
-  stroke-width: 2
+  stroke-width: 2;
   opacity: ${props => props.show ? 1 : 0.5};
-  )};
+  transition: line 0.5s ease-in-out;
 `;
 
 const LabelBox = styled.div`

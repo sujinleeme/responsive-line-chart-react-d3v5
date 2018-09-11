@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
+import ReactDOM from 'react-dom';
 import d3 from './d3';
 import { media } from './style-utils';
 import colors from './colors';
@@ -63,6 +64,7 @@ export default class LineChart extends Component {
     })).then(data => this.setState({
       defaultData: data,
       plotData: data,
+      toolTipData: data[0],
       legends: getLegends(data.columns, 'Year'),
     }, this.onChartSizeChange(data)));
   }
@@ -84,17 +86,22 @@ export default class LineChart extends Component {
   }
 
   moveToolTip(e) {
-    let { x, y } = getMousePos(e);
+    const { x, y } = getMousePos(e);
+    // console.log(x);
     this.onToolTipDataChange(x);
   }
-  
+
   onToolTipDataChange(posX) {
     const { xScale, plotData } = this.state;
     const { viewType } = this.props;
     const marginLeft = MARGIN[viewType].left;
-    const x0 = xScale.invert(posX-marginLeft);
+    const x0 = xScale.invert(posX - marginLeft);
     const bisectDate = d3.bisector(d => d.Year).right;
-    const i = bisectDate(plotData, x0, 0);
+    let i = bisectDate(plotData, x0, 0);
+    if (i === plotData.length) {
+      i -= 1;
+    }
+
     this.setState({ toolTipData: plotData[i] });
   }
 
@@ -175,14 +182,17 @@ export default class LineChart extends Component {
           {Contents.deck}
         </Deck>
         <Wrapper>
-          <Chart innerRef={this.ChartCanvas} height={CANVAS_HEIGHT[viewType]}>
+          <Chart
+            innerRef={this.ChartCanvas}
+            height={CANVAS_HEIGHT[viewType]}
+            onMouseEnter={this.showToolTip}
+            onMouseLeave={this.showToolTip}
+            onMouseMove={this.moveToolTip}
+
+          >
             <Text>Thousand metric tonnes</Text>
             { plotData.length > 0 && (
-            <SVGCanvas
-              onMouseEnter={this.showToolTip}
-              onMouseLeave={this.showToolTip}
-              onMouseMove={e => this.moveToolTip(e)}
-            >
+            <SVGCanvas>
               <AxisX
                 x={x}
                 y={plotHeight}
@@ -195,26 +205,27 @@ export default class LineChart extends Component {
                 yScale={yScale}
                 ticksNum={5}
               />
-              {toolTip && (
+
+
+              <SVGCanvas>
                 <ToolTipBox
                   x={x}
-                  x1={toolTipData? xScale(toolTipData.Year) : x}
+                  x1={xScale(toolTipData.Year)}
                   value={toolTipData}
-                />) }
-                <SVGCanvas>
-              {legends.map(legend => (
-                <Line
-                  key={legend}
-                  x={x}
-                  y="0"
-                  show={isShow[legend]}
-                  xScale={xScale}
-                  yScale={yScale}
-                  strokeColor={colors[legend]}
-                  plotData={getPlotData(plotData, 'Year', legend)}
                 />
-              ))}
-                </SVGCanvas>
+                {legends.map(legend => (
+                  <Line
+                    key={legend}
+                    x={x}
+                    y="0"
+                    show={isShow[legend]}
+                    xScale={xScale}
+                    yScale={yScale}
+                    strokeColor={colors[legend]}
+                    plotData={getPlotData(plotData, 'Year', legend)}
+                  />
+                ))}
+              </SVGCanvas>
             </SVGCanvas>
             )
           }
