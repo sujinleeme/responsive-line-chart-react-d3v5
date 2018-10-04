@@ -1,0 +1,39 @@
+{
+  "name": "responsive-d3-chart",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "d3": "^5.7.0",
+    "d3-array": "^1.2.4",
+    "d3-scale": "^2.1.2",
+    "normalize.css": "^8.0.0",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "react-scripts": "1.1.5",
+    "styled-components": "^3.4.5"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
+  },
+  "description": "Responsive Line Graph",
+  "main": "index.js",
+  "devDependencies": {
+    "babel-eslint": "^7.2.3",
+    "eslint": "^5.5.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-babel": "^5.1.0",
+    "eslint-plugin-flowtype": "^2.50.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-react": "^7.11.1",
+    "gh-pages": "^1.2.0"
+  },
+  "author": "Sujin Lee",
+  "homepage": "http://sujinleeme.github.io/responsive-line-chart-react-d3v5",
+  "license": "MIT"
+}
